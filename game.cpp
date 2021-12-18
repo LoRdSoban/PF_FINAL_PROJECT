@@ -15,7 +15,16 @@
 #include<cmath> // for basic math functions such as cos, sin, sqrt
 using namespace std;
 
-int moving=0, speed =3, direction = 0 ;
+int moving=0, speed =3, direction = 0, last_direction=0;
+bool touching=false;
+
+int walls[][4]= {{2,5,17,1}, {10,20,17,1}, {13,17,7,2}, {5,7,13,1}, {2,4,13,1},{11,13,3,2}, 
+			{3,7,3,2}, {3,7,4,2}, {3,7,5,2},
+			{2,5,8,2},
+			{15,20,5,1} , {3,6,14,2},
+			{8,12,9,1}, {10,15,14,2}, {15,18,12,1}};
+
+void NonPrintableKeys(int key, int x, int y);
 
 // seed the random numbers generator by current time (see the documentation of srand for further help)...
 
@@ -32,20 +41,87 @@ void SetCanvasSize(int width, int height) {
 }
 
 
-int xI = 0, yI = 600;
+int xI = 0, yI = 608;
 
 void drawCar() {
 	DrawSquare(xI, yI, 20, colors[RED]);
 	glutPostRedisplay();
 }
 
+void checkTouching(int xy1, int xy2, int xy, int d)
+{
+	bool colX;
+	bool colY;
+
+	if(d == 1)
+	{
+		colX = xy2*32 >= xI && xI+20 >= xy1*32;
+		colY = (xy+1)*32 >= yI && yI+20 >= xy*32;
+	}
+	else if (d == 2)
+	{
+		colX = (xy+1)*32 >= xI && xI+20 >= xy*32;
+		colY = xy2*32 >= yI && yI+20 >= xy1*32;		
+	}
+	
+
+	// cout << "x1: " << x1*32 <<endl;
+	// cout << "x2: " << x2*32 <<endl;
+	// cout << "y1: " << y1*32 <<endl;
+	// cout << "y2: " << (y1+1)*32 <<endl;
+	// cout << "car x1: " << xI <<endl;
+	// cout << "car x2: " << xI+20 <<endl;
+	// cout << "car y1: " << yI <<endl;
+	// cout << "car y2: " << yI+20 <<endl;
+	
+	
+	
+	if (colX && colY)
+	{
+		last_direction = direction;
+		// makes direction = 0;
+		NonPrintableKeys(0,0,0);
+		
+		touching = true;
+	}
+	else
+	{
+		touching = false;
+	}
+}
 void drawRoads()
 {
-	DabbaBanaoNEW(0,1,17,1, colors[WHITE]);
-	DabbaBanaoNEW(2,5,17,1, colors[DARK_GRAY]);	
-	DabbaBanaoNEW(10,20,17,1, colors[DARK_GRAY]);
-	DabbaBanaoNEW(13,17,7,2, colors[DARK_GRAY]);
-	DabbaBanaoNEW(5,7,13,1, colors[DARK_GRAY]);
+
+	for(int i=0; i <= 20; i ++)
+	{
+		DrawLine( i*32 , 0 ,  i*32 , 640 , 1 , colors[MISTY_ROSE] );
+		DrawLine( 0, i*32 ,  640 , i*32 , 1 , colors[MISTY_ROSE] );
+	}
+
+	for(int i=0; i <15; i++)
+	{
+		DabbaBanaoNEW(walls[i][0], walls[i][1], walls[i][2], walls[i][3], colors[DARK_GRAY]);
+	}
+	// DabbaBanaoNEW(2,5,17,1, colors[DARK_GRAY]);	
+	// DabbaBanaoNEW(10,20,17,1, colors[DARK_GRAY]);
+	// DabbaBanaoNEW(13,17,7,2, colors[DARK_GRAY]);
+	// DabbaBanaoNEW(5,7,13,1, colors[DARK_GRAY]);
+	// DabbaBanaoNEW(2,4,13,1, colors[DARK_GRAY]);
+	// DabbaBanaoNEW(11,13,3,2, colors[DARK_GRAY]);
+
+	// DabbaBanaoNEW(3,7,3,2, colors[DARK_GRAY]);
+	// DabbaBanaoNEW(3,7,4,2, colors[DARK_GRAY]);
+	// DabbaBanaoNEW(3,7,5,2, colors[DARK_GRAY]);
+
+	// DabbaBanaoNEW(2,5,8,2, colors[DARK_GRAY]);
+
+	// DabbaBanaoNEW(15,20,5,1, colors[DARK_GRAY]);
+	// DabbaBanaoNEW(3,6,14,2, colors[DARK_GRAY]);
+
+
+	// DabbaBanaoNEW(8,12,9,1, colors[DARK_GRAY]);
+	// DabbaBanaoNEW(10,15,14,2, colors[DARK_GRAY]);
+	// DabbaBanaoNEW(15,18,12,1, colors[DARK_GRAY]);
 
 
 }
@@ -76,30 +152,47 @@ void movecar()
 	// 	car_timer = time(NULL);
 	// }
 
+	
 	if(direction == 1)
 	{
-		xI += speed;
+		if(!touching && last_direction !=1)
+		{
+			xI += speed;
+			//cout << "right ";
+		}
 	}
 	else if(direction == -1)
 	{
-		xI -= speed;
+		if(!touching && last_direction != -1)
+		{
+			xI -= speed;
+			//cout << "left ";
+		}	
 	}
 	else if(direction == 2)
 	{
-		yI += speed;
+		if(!touching && last_direction != 2)
+		{
+			yI += speed;
+			//cout << "up ";
+		}	
+		
 	}
 	else if(direction == -2)
 	{
-		yI -= speed;
+		if(!touching && last_direction != -2)
+		{
+			yI -= speed;
+			//cout << "down ";
+		}	
 	}
-
 	
 	// if( (moving == 1) &&  (time(NULL) - car_timer >= 0.5))
 	// {
 	// 	direction = 0;
 	// 	moving = 0;
 	// }
-	cout << "car moved";
+	
 
 }
 
@@ -142,6 +235,12 @@ void GameDisplay()/**/{
 
 	drawRoads();
 
+	for(int i=0; i <15; i++)
+	{
+		checkTouching(walls[i][0], walls[i][1], walls[i][2], walls[i][3]);
+	}
+
+
 
 
 	//DabbaBanao(256,544,288,416, colors[DARK_SEA_GREEN]);	
@@ -151,7 +250,7 @@ void GameDisplay()/**/{
 	// DrawRoundRect(350,100,100,50,colors[LIME_GREEN],20);
 	
 	drawCar();
-	movecar();
+	
 	//moveCar();
 	glutSwapBuffers(); // do not modify this line..
 
@@ -170,6 +269,9 @@ void GameDisplay()/**/{
  * */
 
 void NonPrintableKeys(int key, int x, int y) {
+
+	
+
 	if (key== GLUT_KEY_LEFT /*GLUT_KEY_LEFT is constant and contains ASCII for left arrow key*/) 
 	{
 		// what to do when left key is pressed...
@@ -191,6 +293,11 @@ void NonPrintableKeys(int key, int x, int y) {
 		//yI -= 10;
 		direction = -2;
 	}
+	else 
+	{
+		direction = 0;
+	}
+
 
 	/* This function calls the Display function to redo the drawing. Whenever you need to redraw just call
 	 * this function*/
@@ -237,8 +344,10 @@ void Timer(int m) {
 	// implement your functionality here
 	//moveCar();
 
+	movecar();
+
 	// once again we tell the library to call our Timer function after next 1000/FPS
-	glutTimerFunc(100, Timer, 0);
+	glutTimerFunc(10, Timer, 0);
 }
 
 /*This function is called (automatically) whenever your mouse moves witin inside the game window
@@ -301,7 +410,7 @@ int main(int argc, char*argv[]) {
 	glutSpecialFunc(NonPrintableKeys); // tell library which function to call for non-printable ASCII characters
 	glutKeyboardFunc(PrintableKeys); // tell library which function to call for printable ASCII characters
 	// This function tells the library to call our Timer function after 1000.0/FPS milliseconds...
-	glutTimerFunc(1000.0, Timer, 0);
+	glutTimerFunc(100.0, Timer, 0);
 
 	glutMouseFunc(MouseClicked);
 	glutPassiveMotionFunc(MouseMoved); // Mouse
