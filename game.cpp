@@ -25,7 +25,7 @@ int walls[][4]= {{2,5,17,1}, {10,20,17,1}, {13,17,7,2}, {5,7,13,1}, {2,4,13,1},{
 			{8,12,9,1}, {10,15,14,2}, {15,18,12,1}};
 
 void NonPrintableKeys(int key, int x, int y);
-
+void movecar();
 // seed the random numbers generator by current time (see the documentation of srand for further help)...
 
 /* Function sets canvas size (drawing area) in pixels...
@@ -78,16 +78,13 @@ void checkTouching(int xy1, int xy2, int xy, int d)
 	
 	if (colX && colY)
 	{
-		last_direction = direction;
-		// makes direction = 0;
+		direction = -direction;
+		movecar();
+
+		// makes direction = 0
 		NonPrintableKeys(0,0,0);
-		
-		touching = true;
 	}
-	else
-	{
-		touching = false;
-	}
+
 }
 void drawRoads()
 {
@@ -155,36 +152,36 @@ void movecar()
 	
 	if(direction == 1)
 	{
-		if(!touching && last_direction !=1)
-		{
+		//if(!touching && last_direction !=1)
+		//{
 			xI += speed;
 			//cout << "right ";
-		}
+		//}
 	}
 	else if(direction == -1)
 	{
-		if(!touching && last_direction != -1)
-		{
+		//if(!touching && last_direction != -1)
+	//	{
 			xI -= speed;
 			//cout << "left ";
-		}	
+	//	}	
 	}
 	else if(direction == 2)
 	{
-		if(!touching && last_direction != 2)
-		{
+		//if(!touching && last_direction != 2)
+		//{
 			yI += speed;
 			//cout << "up ";
-		}	
+		//}	
 		
 	}
 	else if(direction == -2)
 	{
-		if(!touching && last_direction != -2)
-		{
+		// if(!touching && last_direction != -2)
+		// {
 			yI -= speed;
 			//cout << "down ";
-		}	
+		// }	
 	}
 	
 	// if( (moving == 1) &&  (time(NULL) - car_timer >= 0.5))
