@@ -132,6 +132,28 @@ bool checkCloseTooStickman(int &xy1, int &xy2, int x, int y, int index)
 
 }
 
+bool checkCollision_o_car(int &xy1, int &xy2, int x, int y)
+{
+	bool colX;
+	bool colY;
+
+	colX = xy1+32 >= x && x+20 >= xy1;
+	colY = xy2+32 >= y && y+20 >= xy2;
+
+	
+	if (colX && colY)
+	{
+		GenerateNewLocation(xy1, xy2);
+		xy1 *= 32;
+		xy2 *= 32;
+	}
+	else
+	{
+		return false;
+	}
+
+}
+
 bool checkCollision_Obstacles(int &xy1, int &xy2, int x, int y)
 {
 	bool colX;
@@ -144,6 +166,7 @@ bool checkCollision_Obstacles(int &xy1, int &xy2, int x, int y)
 	if (colX && colY)
 	{
 		GenerateNewLocation(xy1, xy2);
+
 	}
 	else
 	{
@@ -744,7 +767,9 @@ void GameDisplay()/**/{
 	for(int i=0; i<3; i++)
 	{
 		checkCollision_Obstacles(stickman_x[i],stickman_y[i],xI,yI);
-
+		checkCollision_Obstacles(tree_x[i],tree_y[i],xI,yI);
+		checkCollision_Obstacles(box_x[i],box_y[i],xI,yI);
+		checkCollision_o_car(o_car_x[i],o_car_y[i],xI,yI);
 
 		if (is_close_stickman == 0)
 		{
