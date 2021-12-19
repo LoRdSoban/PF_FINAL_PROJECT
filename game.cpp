@@ -22,7 +22,8 @@ int walls[][4]= {{2,5,17,1}, {10,20,17,1}, {13,17,7,2}, {5,7,13,1}, {2,4,13,1},{
 			{3,7,3,2}, {3,7,4,2}, {3,7,5,2},
 			{2,5,8,2},
 			{15,20,5,1} , {3,6,14,2},
-			{8,12,9,1}, {10,15,14,2}, {15,18,12,1}};
+			{8,12,9,1}, {10,15,14,2}, {15,18,12,1},
+			{0,20,20,1},{0,20,-1,1},{0,20,-1,2}, {0,20,20,2} }; // invisible walls / boundary walls
 
 void NonPrintableKeys(int key, int x, int y);
 void movecar();
@@ -48,6 +49,23 @@ void drawCar() {
 	glutPostRedisplay();
 }
 
+void DrawStickMan(int x, int y)
+{
+	//head
+	DrawCircle((x*32)+16 ,(y*32)+27,5,colors[ROSY_BROWN]);
+
+	//body
+	DrawLine((x*32)+16,(y*32)+10,(x*32)+16,(y*32)+32,1,colors[ROSY_BROWN]);
+
+	//arms
+	DrawLine((x*32)+5,(y*32)+22,(x*32)+16,(y*32)+16,1,colors[ROSY_BROWN]);
+	DrawLine((x*32)+16,(y*32)+16,(x*32)+27,(y*32)+22,1,colors[ROSY_BROWN]);
+
+	//legs
+	DrawLine((x*32)+16,(y*32)+10,(x*32)+8,(y*32),1,colors[ROSY_BROWN]);
+	DrawLine((x*32)+16,(y*32)+10,(x*32)+24,(y*32),1,colors[ROSY_BROWN]);
+}
+
 void checkTouching(int xy1, int xy2, int xy, int d)
 {
 	bool colX;
@@ -63,18 +81,7 @@ void checkTouching(int xy1, int xy2, int xy, int d)
 		colX = (xy+1)*32 >= xI && xI+20 >= xy*32;
 		colY = xy2*32 >= yI && yI+20 >= xy1*32;		
 	}
-	
 
-	// cout << "x1: " << x1*32 <<endl;
-	// cout << "x2: " << x2*32 <<endl;
-	// cout << "y1: " << y1*32 <<endl;
-	// cout << "y2: " << (y1+1)*32 <<endl;
-	// cout << "car x1: " << xI <<endl;
-	// cout << "car x2: " << xI+20 <<endl;
-	// cout << "car y1: " << yI <<endl;
-	// cout << "car y2: " << yI+20 <<endl;
-	
-	
 	
 	if (colX && colY)
 	{
@@ -89,13 +96,13 @@ void checkTouching(int xy1, int xy2, int xy, int d)
 void drawRoads()
 {
 
-	for(int i=0; i <= 20; i ++)
-	{
-		DrawLine( i*32 , 0 ,  i*32 , 640 , 1 , colors[MISTY_ROSE] );
-		DrawLine( 0, i*32 ,  640 , i*32 , 1 , colors[MISTY_ROSE] );
-	}
+	// for(int i=0; i <= 20; i ++)
+	// {
+	// 	DrawLine( i*32 , 0 ,  i*32 , 640 , 1 , colors[MISTY_ROSE] );
+	// 	DrawLine( 0, i*32 ,  640 , i*32 , 1 , colors[MISTY_ROSE] );
+	// }
 
-	for(int i=0; i <15; i++)
+	for(int i=0; i <19; i++)
 	{
 		DabbaBanaoNEW(walls[i][0], walls[i][1], walls[i][2], walls[i][3], colors[DARK_GRAY]);
 	}
@@ -231,8 +238,8 @@ void GameDisplay()/**/{
 	//DrawRoundRect(512,512,128,32,colors[DARK_OLIVE_GREEN],20);	
 
 	drawRoads();
-
-	for(int i=0; i <15; i++)
+	DrawStickMan(12,5);
+	for(int i=0; i <19; i++)
 	{
 		checkTouching(walls[i][0], walls[i][1], walls[i][2], walls[i][3]);
 	}
