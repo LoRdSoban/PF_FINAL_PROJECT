@@ -15,9 +15,9 @@
 #include<cmath> // for basic math functions such as cos, sin, sqrt
 using namespace std;
 
-int moving=0, speed =3, direction = 0 , o_direction[3] = {-2,-2,-2}, last_direction=0;
-bool touching=false;
-int stickman_x[3]={0} ,stickman_y[3]={0}, tree_x[3]={0}, tree_y[3]={0}, box_x[3]={0}, box_y[3]={0}, o_car_x[3]={0}, o_car_y[3]={0};
+int score=0, moving=0, speed =2, direction = 0 , o_direction[3] = {-2,-2,-2}, last_direction=0;
+bool is_close_stickman=0, close_stickman_index, touching=false;
+int stickman_x[3]={0} ,stickman_y[3]={0}, tree_x[3]={0}, tree_y[3]={0}, box_x[3]={0}, box_y[3]={0}, o_car_x[3]={0}, o_car_y[3]={0}, drop_x =-1, drop_y=-1 ;
 
 int walls[][4]= {{2,5,17,1}, {10,20,17,1}, {13,17,7,2}, {5,7,13,1}, {2,4,13,1},{11,13,3,2}, 
 			{3,7,3,2}, {3,7,4,2}, {3,7,5,2},
@@ -28,6 +28,8 @@ int walls[][4]= {{2,5,17,1}, {10,20,17,1}, {13,17,7,2}, {5,7,13,1}, {2,4,13,1},{
 
 void NonPrintableKeys(int key, int x, int y);
 void movecar();
+void GenerateNewLocation(int& x, int& y);
+bool checkoverlapping(int xy1, int xy2, int xy, int d, int o_x, int o_y);
 // seed the random numbers generator by current time (see the documentation of srand for further help)...
 
 /* Function sets canvas size (drawing area) in pixels...
@@ -106,7 +108,48 @@ void drawBox(int x, int y)
 
 }
 
+bool checkCloseTooStickman(int &xy1, int &xy2, int x, int y, int index)
+{
+	bool colX;
+	bool colY;
 
+	colX = (xy1+1)*32 >= x-60 && x+80 >= xy1*32;
+	colY = (xy2+1)*32 >= y-60 && y+80 >= xy2*32;
+
+	cout << is_close_stickman << endl;
+	if (colX && colY)
+	{
+		is_close_stickman = 1;
+		close_stickman_index = index;
+	}
+	else
+	{
+		is_close_stickman =0;
+		close_stickman_index = 99;
+	}
+
+
+}
+
+bool checkCollision_Obstacles(int &xy1, int &xy2, int x, int y)
+{
+	bool colX;
+	bool colY;
+
+	colX = (xy1+1)*32 >= x && x+20 >= xy1*32;
+	colY = (xy2+1)*32 >= y && y+20 >= xy2*32;
+
+	
+	if (colX && colY)
+	{
+		GenerateNewLocation(xy1, xy2);
+	}
+	else
+	{
+		return false;
+	}
+
+}
 
 bool checkTouching_o_car(int xy1, int xy2, int xy, int d, int o_x, int o_y)
 {
@@ -407,7 +450,7 @@ void GenerateRandomLocations()
 				{
 					if(i !=j)
 					{
-						if (o_car_x[i] == o_car_x[j]  )
+						if (o_car_x[i] == o_car_x[j])
 						{
 							is_overlapping = true;
 							break;
@@ -462,6 +505,83 @@ void GenerateRandomLocations()
 
 	}
 
+}
+
+void GenerateNewLocation(int& X, int& Y)
+{
+	bool is_overlapping = false;
+	int x,y;
+	
+	do
+	{
+		x = GetRandInRange(0,19);
+		y = GetRandInRange(0,19);
+
+		for(int k=0; k <19; k++)
+		{
+			is_overlapping = checkoverlapping(walls[k][0], walls[k][1], walls[k][2], walls[k][3], x, y);
+			if (is_overlapping)
+			{
+				break;
+			}
+		}
+
+		if (!is_overlapping) // checks if the location has already used or not
+		{
+			for(int j=0; j <3; j++)
+			{
+				if (x == o_car_x[j])
+				{
+					is_overlapping = true;
+					break;
+				}
+
+			}
+		}
+		
+		if (!is_overlapping) // checks if the location has already used or not
+		{
+			for(int j=0; j <3; j++)
+			{
+
+				if (x == tree_x[j] && y == tree_y[j] )
+				{
+					is_overlapping = true;
+					break;
+				}
+			}
+		}
+
+		if (!is_overlapping) // checks if the location has already used or not by stickman
+		{
+			for(int j=0; j <3; j++)
+			{
+
+				if (x == stickman_x[j] && y == stickman_y[j] )
+				{
+					is_overlapping = true;
+					break;
+				}
+				
+			}
+		}
+
+		if (!is_overlapping) // checks if the location has already used or not
+		{
+			for(int j=0; j <3; j++)
+			{
+				if (x == box_x[j] && y == box_y[j])
+				{
+					is_overlapping = true;
+					break;
+				}
+			
+			}
+		}
+	}while (is_overlapping);
+
+	X = x;
+	Y = y;
 }
 
 bool flag = true;
@@ -606,6 +726,7 @@ void GameDisplay()/**/{
 	
 	for(int i=0; i<3; i++)
 	{
+		DrawSquare(drop_x*32,drop_y*32, 32, colors[GREEN]);
 		drawStickMan(stickman_x[i],stickman_y[i]);
 		drawTree(tree_x[i],tree_y[i]);
 		drawBox(box_x[i],box_y[i]);
@@ -619,6 +740,20 @@ void GameDisplay()/**/{
 		checkTouching(walls[i][0], walls[i][1], walls[i][2], walls[i][3]);
 	}
 
+	for(int i=0; i<3; i++)
+	{
+		checkCollision_Obstacles(stickman_x[i],stickman_y[i],xI,yI);
+
+
+		if (is_close_stickman ==0)
+		{
+			checkCloseTooStickman(stickman_x[i],stickman_y[i],xI,yI, i);
+		}
+		else
+		{
+			checkCloseTooStickman(stickman_x[close_stickman_index],stickman_y[close_stickman_index],xI,yI, close_stickman_index);
+		}
+	}
 
 
 
@@ -697,11 +832,13 @@ void PrintableKeys(unsigned char key, int x, int y) {
 		exit(1); // exit the program when escape key is pressed.
 	}
 
-	if (key == 'b' || key == 'B') //Key for placing the bomb
-			{
+	if (key == 32 && is_close_stickman) //Key for placing the bomb
+	{
 		//do something if b is pressed
-		cout << "b pressed" << endl;
+		stickman_x[close_stickman_index] = -1;
+		stickman_y[close_stickman_index] = -1;
 
+		GenerateNewLocation(drop_x, drop_y);
 	}
 
 	if (key == 's'|| key == 'S')
