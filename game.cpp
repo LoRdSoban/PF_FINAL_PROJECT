@@ -15,8 +15,8 @@
 #include<cmath> // for basic math functions such as cos, sin, sqrt
 using namespace std;
 
-int score=0, moving=0, speed =2, direction = 0 , o_direction[3] = {-2,-2,-2}, last_direction=0;
-bool is_close_stickman=0, close_stickman_index, touching=false;
+int close_stickman_index=99, score=0, moving=0, speed =2, direction = 0 , o_direction[3] = {-2,-2,-2}, last_direction=0;
+bool is_close_stickman=0, touching=false;
 int stickman_x[3]={0} ,stickman_y[3]={0}, tree_x[3]={0}, tree_y[3]={0}, box_x[3]={0}, box_y[3]={0}, o_car_x[3]={0}, o_car_y[3]={0}, drop_x =-1, drop_y=-1 ;
 
 int walls[][4]= {{2,5,17,1}, {10,20,17,1}, {13,17,7,2}, {5,7,13,1}, {2,4,13,1},{11,13,3,2}, 
@@ -45,7 +45,7 @@ void SetCanvasSize(int width, int height) {
 }
 
 
-int xI = 0, yI = 608;
+int xI = 10, yI = 608;
 
 void drawCar() {
 	DrawSquare(xI, yI, 20, colors[RED]);
@@ -117,6 +117,7 @@ bool checkCloseTooStickman(int &xy1, int &xy2, int x, int y, int index)
 	colY = (xy2+1)*32 >= y-60 && y+80 >= xy2*32;
 
 	cout << is_close_stickman << endl;
+	cout << "close_stickman_index" << close_stickman_index << endl;
 	if (colX && colY)
 	{
 		is_close_stickman = 1;
@@ -745,7 +746,7 @@ void GameDisplay()/**/{
 		checkCollision_Obstacles(stickman_x[i],stickman_y[i],xI,yI);
 
 
-		if (is_close_stickman ==0)
+		if (is_close_stickman == 0)
 		{
 			checkCloseTooStickman(stickman_x[i],stickman_y[i],xI,yI, i);
 		}
@@ -837,7 +838,7 @@ void PrintableKeys(unsigned char key, int x, int y) {
 		//do something if b is pressed
 		stickman_x[close_stickman_index] = -1;
 		stickman_y[close_stickman_index] = -1;
-
+		is_close_stickman = 99;
 		GenerateNewLocation(drop_x, drop_y);
 	}
 
