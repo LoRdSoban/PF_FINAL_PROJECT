@@ -15,9 +15,9 @@
 #include<cmath> // for basic math functions such as cos, sin, sqrt
 using namespace std;
 
-int moving=0, speed =3, direction = 0, last_direction=0;
+int moving=0, speed =3, direction = 0 , o_direction[3] = {-2,-2,-2}, last_direction=0;
 bool touching=false;
-int stickman_x[3]={0} ,stickman_y[3]={0}, tree_x[3]={0}, tree_y[3]={0}, box_x[3]={0}, box_y[3]={0};
+int stickman_x[3]={0} ,stickman_y[3]={0}, tree_x[3]={0}, tree_y[3]={0}, box_x[3]={0}, box_y[3]={0}, o_car_x[3]={0}, o_car_y[3]={0};
 
 int walls[][4]= {{2,5,17,1}, {10,20,17,1}, {13,17,7,2}, {5,7,13,1}, {2,4,13,1},{11,13,3,2}, 
 			{3,7,3,2}, {3,7,4,2}, {3,7,5,2},
@@ -48,6 +48,12 @@ int xI = 0, yI = 608;
 void drawCar() {
 	DrawSquare(xI, yI, 20, colors[RED]);
 	glutPostRedisplay();
+}
+
+void drawObstacleCar(int x, int y)
+{
+	DrawSquare(x, y, 20, colors[BLUE]);
+	//glutPostRedisplay();
 }
 
 void drawStickMan(int x, int y)
@@ -101,6 +107,34 @@ void drawBox(int x, int y)
 }
 
 
+
+bool checkTouching_o_car(int xy1, int xy2, int xy, int d, int o_x, int o_y)
+{
+	bool colX;
+	bool colY;
+	
+
+	if(d == 1)
+	{
+		colX = xy2*32 >= o_x && o_x+20 >= xy1*32;
+		colY = (xy+1)*32 >= o_y && o_y+20 >= xy*32;
+	}
+	else if (d == 2)
+	{
+		colX = (xy+1)*32 >= o_x && o_x+20 >= xy*32;
+		colY = xy2*32 >= o_y && o_y+20 >= xy1*32;		
+	}
+	
+	if (colX && colY)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+
+}
 
 bool checkoverlapping(int xy1, int xy2, int xy, int d, int o_x, int o_y)
 {
@@ -199,6 +233,8 @@ void GenerateRandomLocations()
 {
 	bool is_overlapping = false;
 	
+	// RANDOM POSITION FOR OBSTACLE STICKMANS
+	//
 	for(int i=0; i<3; i++)
 	{
 		do
@@ -234,7 +270,8 @@ void GenerateRandomLocations()
 
 	}
 
-
+	// RANDOM POSITION FOR OBSTACLE TREES
+	//
 	for(int i=0; i<3; i++)
 	{
 		do
@@ -282,6 +319,9 @@ void GenerateRandomLocations()
 		}while (is_overlapping);
 	}
 
+
+	// RANDOM POSITION FOR BOXS
+	//
 	for(int i=0; i<3; i++)
 	{
 		do
@@ -317,14 +357,13 @@ void GenerateRandomLocations()
 			{
 				for(int j=0; j <3; j++)
 				{
-					if(i !=j)
+
+					if (box_x[i] == tree_x[j] && box_y[i] == tree_y[j] )
 					{
-						if (box_x[i] == tree_x[j] && box_y[i] == tree_y[j] )
-						{
-							is_overlapping = true;
-							break;
-						}
+						is_overlapping = true;
+						break;
 					}
+					
 				}
 			}
 
@@ -342,6 +381,85 @@ void GenerateRandomLocations()
 				}
 			}
 		}while (is_overlapping);
+	}
+
+	// RANDOM POSITION FOR OBSTACLE CARS
+	//
+	for(int i=0; i<3; i++)
+	{
+		do
+		{
+			o_car_x[i] = GetRandInRange(0,19);
+			o_car_y[i] = GetRandInRange(0,19);
+
+			for(int k=0; k <19; k++)
+			{
+				is_overlapping = checkoverlapping(walls[k][0], walls[k][1], walls[k][2], walls[k][3], o_car_x[i], o_car_y[i]);
+				if (is_overlapping)
+				{
+					break;
+				}
+			}
+
+			if (!is_overlapping) // checks if the location has already used or not
+			{
+				for(int j=0; j <3; j++)
+				{
+					if(i !=j)
+					{
+						if (o_car_x[i] == o_car_x[j]  )
+						{
+							is_overlapping = true;
+							break;
+						}
+					}
+				}
+			}
+			
+			if (!is_overlapping) // checks if the location has already used or not
+			{
+				for(int j=0; j <3; j++)
+				{
+
+					if (o_car_x[i] == tree_x[j] )
+					{
+						is_overlapping = true;
+						break;
+					}
+				}
+			}
+
+			if (!is_overlapping) // checks if the location has already used or not by stickman
+			{
+				for(int j=0; j <3; j++)
+				{
+
+					if (o_car_x[i] == stickman_x[j] )
+					{
+						is_overlapping = true;
+						break;
+					}
+					
+				}
+			}
+
+			if (!is_overlapping) // checks if the location has already used or not
+			{
+				for(int j=0; j <3; j++)
+				{
+					if (o_car_x[i] == box_x[j] )
+					{
+						is_overlapping = true;
+						break;
+					}
+				
+				}
+			}
+		}while (is_overlapping);
+
+		o_car_x[i] *= 32;
+		o_car_y[i] *= 32;
+
 	}
 
 }
@@ -416,6 +534,37 @@ void movecar()
 
 }
 
+void move_o_car()
+{
+	for(int i=0; i<3; i++)
+	{
+		if(o_direction[i] == 1)
+		{
+
+			 o_car_x[i] += speed;
+
+		}
+		else if(o_direction[i] == -1)
+		{
+
+			o_car_x[i] -= speed;
+
+		}
+		else if(o_direction[i]== 2)
+		{
+
+			o_car_y[i] += speed;
+			
+		}
+		else if(o_direction[i] == -2)
+		{
+
+			o_car_y[i] -= speed;
+		}
+	}
+	
+}
+
 /*
  * Main Canvas drawing function.
  * */
@@ -460,6 +609,7 @@ void GameDisplay()/**/{
 		drawStickMan(stickman_x[i],stickman_y[i]);
 		drawTree(tree_x[i],tree_y[i]);
 		drawBox(box_x[i],box_y[i]);
+		drawObstacleCar(o_car_x[i], o_car_y[i]);
 	}
 
 	
@@ -468,6 +618,8 @@ void GameDisplay()/**/{
 	{
 		checkTouching(walls[i][0], walls[i][1], walls[i][2], walls[i][3]);
 	}
+
+
 
 
 
@@ -574,6 +726,20 @@ void Timer(int m) {
 	//moveCar();
 
 	movecar();
+	move_o_car();
+
+	for(int j=0; j<3; j++)
+	{
+		for(int i=0; i <19; i++)
+		{
+			if( checkTouching_o_car(walls[i][0], walls[i][1], walls[i][2], walls[i][3], o_car_x[j],o_car_y[j]) )
+			{
+				o_direction[j] *= -1;
+				break;
+			}
+			
+		}
+	}
 
 	// once again we tell the library to call our Timer function after next 1000/FPS
 	glutTimerFunc(10, Timer, 0);
