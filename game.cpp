@@ -73,6 +73,32 @@ void drawTree(int x, int y)
 	DrawLine((x*32)+16, (y*32)+16, (x*32)+16, (y*32) ,10 ,colors[BROWN]);
 }
 
+void drawBox(int x, int y)
+{
+	//1
+	DrawTriangle((x*32)+2, (y*32)+22, (x*32)+22, (y*32)+30, (x*32)+32, (y*32)+22, colors[WHITE] );
+	
+	//2
+	DrawTriangle((x*32)+2, (y*32)+22, (x*32)+10, (y*32)+12, (x*32)+32, (y*32)+22, colors[WHITE] );
+	
+	//3
+	DrawTriangle((x*32)+2, (y*32)+22, (x*32)+10, (y*32)+12, (x*32)+10, (y*32)+2, colors[SILVER] );
+	
+	//4
+	DrawTriangle((x*32)+2, (y*32)+22, (x*32)+2, (y*32)+9, (x*32)+10, (y*32)+2, colors[SILVER] );
+	
+	//5
+	DrawTriangle((x*32)+10, (y*32)+2, (x*32)+10, (y*32)+12, (x*32)+32, (y*32)+22, colors[SLATE_GRAY] );
+	
+	//6
+	DrawTriangle((x*32)+10, (y*32)+2, (x*32)+32, (y*32)+9, (x*32)+32, (y*32)+22, colors[SLATE_GRAY] );
+
+	//tape	
+	DrawLine((x*32)+6, (y*32)+18, (x*32)+26, (y*32)+27, 2, colors[YELLOW]);
+	DrawLine((x*32)+6, (y*32)+18, (x*32)+6, (y*32)+9, 2, colors[YELLOW]);
+
+}
+
 bool checkoverlapping(int xy1, int xy2, int xy, int d, int o_x, int o_y)
 {
 	bool colX;
@@ -319,7 +345,8 @@ void GameDisplay()/**/{
 		drawStickMan(stickman_x[i],stickman_y[i]);
 
 	drawTree(15, 4);
-	
+	drawBox(11, 3);
+
 	for(int i=0; i <19; i++)
 	{
 		checkTouching(walls[i][0], walls[i][1], walls[i][2], walls[i][3]);
