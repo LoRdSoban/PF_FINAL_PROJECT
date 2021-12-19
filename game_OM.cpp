@@ -15,10 +15,11 @@
 #include<cmath> // for basic math functions such as cos, sin, sqrt
 using namespace std;
 
-int moving=0, speed =3, direction = 0, last_direction=0;
+int moving=0, speed =2, direction = 0, last_direction=0;
 bool touching=false;
-int stickman_x[3]={0} ,stickman_y[3]={0}, tree_x[3]={0}, tree_y[3]={0}, box_x[3]={0}, box_y[3]={0};
-
+int stickman_x[3]={0} ,stickman_y[3]={0};
+int treex[3]={0} ,treey[3]={0};
+int boxx[3]={0} ,boxy[3]={0};
 int walls[][4]= {{2,5,17,1}, {10,20,17,1}, {13,17,7,2}, {5,7,13,1}, {2,4,13,1},{11,13,3,2}, 
 			{3,7,3,2}, {3,7,4,2}, {3,7,5,2},
 			{2,5,8,2},
@@ -43,10 +44,15 @@ void SetCanvasSize(int width, int height) {
 }
 
 
-int xI = 0, yI = 608;
+int xI = 20, yI = 608;
 
 void drawCar() {
 	DrawSquare(xI, yI, 20, colors[RED]);
+	glutPostRedisplay();
+}
+int cx[3]={0} ,cy[3]={0};
+void drawCaropp1(int x,int y) {
+	DrawSquare(xI, yI, 20, colors[GREEN]);
 	glutPostRedisplay();
 }
 
@@ -73,7 +79,6 @@ void drawTree(int x, int y)
 	DrawLine((x*32)+16, (y*32)+16, (x*32)+16, (y*32) ,10 ,colors[BROWN]);
 }
 
-
 void drawBox(int x, int y)
 {
 	//1
@@ -99,8 +104,6 @@ void drawBox(int x, int y)
 	DrawLine((x*32)+6, (y*32)+18, (x*32)+6, (y*32)+9, 2, colors[YELLOW]);
 
 }
-
-
 
 bool checkoverlapping(int xy1, int xy2, int xy, int d, int o_x, int o_y)
 {
@@ -194,6 +197,124 @@ void drawRoads()
 
 
 }
+void GenerateRandomLocationt()
+{
+	bool is_overlapping = false;
+	
+	for(int i=0; i<3; i++)
+	{
+		do
+		{
+			treex[i] = GetRandInRange(0,19);
+			treey[i] = GetRandInRange(0,19);
+
+			for(int k=0; k <19; k++)
+			{
+				is_overlapping = checkoverlapping(walls[k][0], walls[k][1], walls[k][2], walls[k][3], treex[i], treey[i]);
+				if (is_overlapping)
+				{
+					break;
+				}
+			}
+
+			if (!is_overlapping) // checks if the lacation has already used or not
+			{
+				for(int j=0; j <3; j++)
+				{
+					if(i !=j)
+					{
+						if (treex[i] == treex[j] && treey[i] == treey[j] )
+						{
+							is_overlapping = true;
+							break;
+						}
+					}
+				}
+			}
+
+		}while (is_overlapping);
+
+	}
+}
+void GenerateRandomLocationc()
+{
+	bool is_overlapping = false;
+	
+	for(int i=0; i<3; i++)
+	{
+		do
+		{
+			cx[i] = GetRandInRange(0,19);
+			cy[i] = GetRandInRange(0,19);
+
+			for(int k=0; k <19; k++)
+			{
+				is_overlapping = checkoverlapping(walls[k][0], walls[k][1], walls[k][2], walls[k][3], treex[i], treey[i]);
+				if (is_overlapping)
+				{
+					break;
+				}
+			}
+
+			if (!is_overlapping) // checks if the lacation has already used or not
+			{
+				for(int j=0; j <3; j++)
+				{
+					if(i !=j)
+					{
+						if (cx[i] == cx[j] && cy[i] == cy[j] )
+						{
+							is_overlapping = true;
+							break;
+						}
+					}
+				}
+			}
+
+		}while (is_overlapping);
+
+	}
+}
+void GenerateRandomLocationb()
+{
+	bool is_overlapping = false;
+	
+	for(int i=0; i<3; i++)
+	{
+		do
+		{
+			boxx[i] = GetRandInRange(0,19);
+			boxy[i] = GetRandInRange(0,19);
+
+			for(int k=0; k <19; k++)
+			{
+				is_overlapping = checkoverlapping(walls[k][0], walls[k][1], walls[k][2], walls[k][3], stickman_x[i], stickman_y[i]);
+				if (is_overlapping)
+				{
+					break;
+				}
+			}
+
+			if (!is_overlapping) // checks if the lacation has already used or not
+			{
+				for(int j=0; j <3; j++)
+				{
+					if(i !=j)
+					{
+						if (boxx[i] == boxx[j] && boxy[i] == boxy[j] )
+						{
+							is_overlapping = true;
+							break;
+						}
+					}
+				}
+			}
+
+		}while (is_overlapping);
+
+	}
+}
+
 
 void GenerateRandomLocations()
 {
@@ -215,7 +336,7 @@ void GenerateRandomLocations()
 				}
 			}
 
-			if (!is_overlapping) // checks if the location has already used or not
+			if (!is_overlapping) // checks if the lacation has already used or not
 			{
 				for(int j=0; j <3; j++)
 				{
@@ -226,38 +347,7 @@ void GenerateRandomLocations()
 							is_overlapping = true;
 							break;
 						}
-					}
-				}
-			}
-
-		}while (is_overlapping);
-
-	}
-
-
-	for(int i=0; i<3; i++)
-	{
-		do
-		{
-			tree_x[i] = GetRandInRange(0,19);
-			tree_y[i] = GetRandInRange(0,19);
-
-			for(int k=0; k <19; k++)
-			{
-				is_overlapping = checkoverlapping(walls[k][0], walls[k][1], walls[k][2], walls[k][3], tree_x[i], tree_y[i]);
-				if (is_overlapping)
-				{
-					break;
-				}
-			}
-
-			if (!is_overlapping) // checks if the location has already used or not
-			{
-				for(int j=0; j <3; j++)
-				{
-					if(i !=j)
-					{
-						if (tree_x[i] == tree_x[j] && tree_y[i] == tree_y[j] )
+						if (stickman_x[i] == treex[j] && stickman_y[i] == treey[j] )
 						{
 							is_overlapping = true;
 							break;
@@ -266,84 +356,9 @@ void GenerateRandomLocations()
 				}
 			}
 
-			if (!is_overlapping) // checks if the location has already used or not by stickman
-			{
-				for(int j=0; j <3; j++)
-				{
-
-					if (tree_x[i] == stickman_x[j] && tree_y[i] == stickman_y[j] )
-					{
-						is_overlapping = true;
-						break;
-					}
-					
-				}
-			}
 		}while (is_overlapping);
+
 	}
-
-	for(int i=0; i<3; i++)
-	{
-		do
-		{
-			box_x[i] = GetRandInRange(0,19);
-			box_y[i] = GetRandInRange(0,19);
-
-			for(int k=0; k <19; k++)
-			{
-				is_overlapping = checkoverlapping(walls[k][0], walls[k][1], walls[k][2], walls[k][3], box_x[i], box_y[i]);
-				if (is_overlapping)
-				{
-					break;
-				}
-			}
-
-			if (!is_overlapping) // checks if the location has already used or not
-			{
-				for(int j=0; j <3; j++)
-				{
-					if(i !=j)
-					{
-						if (box_x[i] == box_x[j] && box_y[i] == box_y[j] )
-						{
-							is_overlapping = true;
-							break;
-						}
-					}
-				}
-			}
-			
-			if (!is_overlapping) // checks if the location has already used or not
-			{
-				for(int j=0; j <3; j++)
-				{
-					if(i !=j)
-					{
-						if (box_x[i] == tree_x[j] && box_y[i] == tree_y[j] )
-						{
-							is_overlapping = true;
-							break;
-						}
-					}
-				}
-			}
-
-			if (!is_overlapping) // checks if the location has already used or not by stickman
-			{
-				for(int j=0; j <3; j++)
-				{
-
-					if (box_x[i] == stickman_x[j] && box_y[i] == stickman_y[j] )
-					{
-						is_overlapping = true;
-						break;
-					}
-					
-				}
-			}
-		}while (is_overlapping);
-	}
-
 }
 
 bool flag = true;
@@ -400,7 +415,7 @@ void movecar()
 	}
 	else if(direction == -2)
 	{
-		// if(!touching && last_direction != -2)
+		// if(!touching && last_direction != -2)stickman_
 		// {
 			yI -= speed;
 			//cout << "down ";
@@ -452,18 +467,18 @@ void GameDisplay()/**/{
 	// DrawCircle(90,670,10,colors[RED]);
 	//DrawRoundRect(500,200,50,100,colors[DARK_SEA_GREEN],70);
 	//DrawRoundRect(512,512,128,32,colors[DARK_OLIVE_GREEN],20);	
+for (int i = 0; i < 3; i++)
+drawTree(treex[i],treey[i]);
 
 	drawRoads();
 	
 	for(int i=0; i<3; i++)
-	{
 		drawStickMan(stickman_x[i],stickman_y[i]);
-		drawTree(tree_x[i],tree_y[i]);
-		drawBox(box_x[i],box_y[i]);
-	}
 
-	
-
+for(int i=0; i<3; i++)	
+{
+drawBox(boxx[i], boxy[i]);
+}
 	for(int i=0; i <19; i++)
 	{
 		checkTouching(walls[i][0], walls[i][1], walls[i][2], walls[i][3]);
@@ -647,8 +662,9 @@ int main(int argc, char*argv[]) {
 
 
 	GenerateRandomLocations();
-
-
+	GenerateRandomLocationt();
+	GenerateRandomLocationb();
+	GenerateRandomLocationc();
 	// now handle the control to library and it will call our registered functions when
 	// it deems necessary...
 	glutMainLoop();
