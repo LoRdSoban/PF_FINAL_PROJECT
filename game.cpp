@@ -17,6 +17,7 @@ using namespace std;
 
 int moving=0, speed =3, direction = 0, last_direction=0;
 bool touching=false;
+int stickman_x[3]={0} ,stickman_y[3]={0};
 
 int walls[][4]= {{2,5,17,1}, {10,20,17,1}, {13,17,7,2}, {5,7,13,1}, {2,4,13,1},{11,13,3,2}, 
 			{3,7,3,2}, {3,7,4,2}, {3,7,5,2},
@@ -49,22 +50,57 @@ void drawCar() {
 	glutPostRedisplay();
 }
 
-void DrawStickMan(int x, int y)
+void drawStickMan(int x, int y)
 {
 	//head
-	DrawCircle((x*32)+16 ,(y*32)+27,5,colors[ROSY_BROWN]);
+	DrawCircle((x*32)+16 ,(y*32)+27,5,colors[PLUM]);
 
 	//body
-	DrawLine((x*32)+16,(y*32)+10,(x*32)+16,(y*32)+32,1,colors[ROSY_BROWN]);
+	DrawLine((x*32)+16,(y*32)+10,(x*32)+16,(y*32)+32,1,colors[PLUM]);
 
 	//arms
-	DrawLine((x*32)+5,(y*32)+22,(x*32)+16,(y*32)+16,1,colors[ROSY_BROWN]);
-	DrawLine((x*32)+16,(y*32)+16,(x*32)+27,(y*32)+22,1,colors[ROSY_BROWN]);
+	DrawLine((x*32)+5,(y*32)+22,(x*32)+16,(y*32)+16,1,colors[PLUM]);
+	DrawLine((x*32)+16,(y*32)+16,(x*32)+27,(y*32)+22,1,colors[PLUM]);
 
 	//legs
-	DrawLine((x*32)+16,(y*32)+10,(x*32)+8,(y*32),1,colors[ROSY_BROWN]);
-	DrawLine((x*32)+16,(y*32)+10,(x*32)+24,(y*32),1,colors[ROSY_BROWN]);
+	DrawLine((x*32)+16,(y*32)+10,(x*32)+8,(y*32),1,colors[PLUM]);
+	DrawLine((x*32)+16,(y*32)+10,(x*32)+24,(y*32),1,colors[PLUM]);
 }
+
+void drawTree(int x, int y)
+{
+	DrawTriangle((x*32)+5, (y*32)+16, (x*32)+27, (y*32)+16, (x*32)+16, (y*32)+32, colors[FOREST_GREEN]);
+	DrawLine((x*32)+16, (y*32)+16, (x*32)+16, (y*32) ,10 ,colors[BROWN]);
+}
+
+bool checkoverlapping(int xy1, int xy2, int xy, int d, int o_x, int o_y)
+{
+	bool colX;
+	bool colY;
+	
+
+	if(d == 1)
+	{
+		colX = xy2*32 >= o_x*32 && (o_x+1)*32 >= xy1*32;
+		colY = (xy+1)*32 >= o_y*32 && (o_y+1)*32 >= xy*32;
+	}
+	else if (d == 2)
+	{
+		colX = (xy+1)*32 >= o_x*32 && (o_x+1)*32 >= xy*32;
+		colY = xy2*32 >= o_y*32 && (o_y+1)*32 >= xy1*32;		
+	}
+	
+	if (colX && colY)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+
+}
+
 
 void checkTouching(int xy1, int xy2, int xy, int d)
 {
@@ -128,6 +164,46 @@ void drawRoads()
 	// DabbaBanaoNEW(15,18,12,1, colors[DARK_GRAY]);
 
 
+}
+
+void GenerateRandomLocations()
+{
+	bool is_overlapping = false;
+	
+	for(int i=0; i<3; i++)
+	{
+		do
+		{
+			stickman_x[i] = GetRandInRange(0,19);
+			stickman_y[i] = GetRandInRange(0,19);
+
+			for(int k=0; k <19; k++)
+			{
+				is_overlapping = checkoverlapping(walls[k][0], walls[k][1], walls[k][2], walls[k][3], stickman_x[i], stickman_y[i]);
+				if (is_overlapping)
+				{
+					break;
+				}
+			}
+
+			if (!is_overlapping) // checks if the lacation has already used or not
+			{
+				for(int j=0; j <3; j++)
+				{
+					if(i !=j)
+					{
+						if (stickman_x[i] == stickman_x[j] && stickman_y[i] == stickman_y[j] )
+						{
+							is_overlapping = true;
+							break;
+						}
+					}
+				}
+			}
+
+		}while (is_overlapping);
+
+	}
 }
 
 bool flag = true;
@@ -238,7 +314,12 @@ void GameDisplay()/**/{
 	//DrawRoundRect(512,512,128,32,colors[DARK_OLIVE_GREEN],20);	
 
 	drawRoads();
-	DrawStickMan(12,5);
+	
+	for(int i=0; i<3; i++)
+		drawStickMan(stickman_x[i],stickman_y[i]);
+
+	drawTree(15, 4);
+	
 	for(int i=0; i <19; i++)
 	{
 		checkTouching(walls[i][0], walls[i][1], walls[i][2], walls[i][3]);
@@ -421,7 +502,7 @@ int main(int argc, char*argv[]) {
 	glutMotionFunc(MousePressedAndMoved); // Mouse
 
 
-
+	GenerateRandomLocations();
 
 
 	// now handle the control to library and it will call our registered functions when
