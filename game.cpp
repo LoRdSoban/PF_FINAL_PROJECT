@@ -15,9 +15,11 @@
 #include<cmath> // for basic math functions such as cos, sin, sqrt
 using namespace std;
 
-int close_stickman_index=99, score=0, moving=0, speed =2, direction = 0 , o_direction[3] = {-2,-2,-2}, last_direction=0;
-bool is_close_stickman=0, touching=false;
+int close_stickman_index=99, num_picked_stickman = 0, score=0, moving=0, speed =2, direction = 0 , o_direction[3] = {-2,-2,-2}, last_direction=0;
+bool win=0,start=0, is_close_stickman=0, is_close_drop=0, touching=false, picked_stickman = 0;
 int stickman_x[3]={0} ,stickman_y[3]={0}, tree_x[3]={0}, tree_y[3]={0}, box_x[3]={0}, box_y[3]={0}, o_car_x[3]={0}, o_car_y[3]={0}, drop_x =-1, drop_y=-1 ;
+
+int penalties[2][2] = {{2, 3},{4, 2}}, car_type=1; // car_type 3 doesn't exist
 
 int walls[][4]= {{2,5,17,1}, {10,20,17,1}, {13,17,7,2}, {5,7,13,1}, {2,4,13,1},{11,13,3,2}, 
 			{3,7,3,2}, {3,7,4,2}, {3,7,5,2},
@@ -44,11 +46,32 @@ void SetCanvasSize(int width, int height) {
 	glLoadIdentity();
 }
 
+void WIN()
+{
+	DrawSquare(0,0, 1000, colors[YELLOW]);
+	DrawString( 230, 400, "YOU WIN !!", colors[BLACK]); 
+}
+
+// displays score
+void Score()
+{
+	string s = to_string(score);
+
+	DrawString( 530, 600, "Score= ", colors[WHITE]); 
+	DrawString( 600, 600, s, colors[WHITE]);
+
+}
 
 int xI = 10, yI = 608;
 
 void drawCar() {
+
+	if (car_type == 0)
 	DrawSquare(xI, yI, 20, colors[RED]);
+
+	if (car_type == 1)
+	DrawSquare(xI, yI, 20, colors[YELLOW]);
+
 	glutPostRedisplay();
 }
 
@@ -108,7 +131,27 @@ void drawBox(int x, int y)
 
 }
 
-bool checkCloseTooStickman(int &xy1, int &xy2, int x, int y, int index)
+void checkCloseToDrop()
+{
+	bool colX;
+	bool colY;
+
+	colX = (drop_x+1)*32 >= xI && xI+20 >= drop_x*32;
+	colY = (drop_y+1)*32 >= yI && yI+20 >= drop_y*32;
+
+	if (colX && colY)
+	{
+		is_close_drop = 1;
+
+	}
+	else
+	{
+		is_close_drop =0;
+		
+	}
+}
+
+bool checkCloseToStickman(int &xy1, int &xy2, int x, int y, int index)
 {
 	bool colX;
 	bool colY;
@@ -129,7 +172,6 @@ bool checkCloseTooStickman(int &xy1, int &xy2, int x, int y, int index)
 		close_stickman_index = 99;
 	}
 
-
 }
 
 bool checkCollision_o_car(int &xy1, int &xy2, int x, int y)
@@ -146,6 +188,7 @@ bool checkCollision_o_car(int &xy1, int &xy2, int x, int y)
 		GenerateNewLocation(xy1, xy2);
 		xy1 *= 32;
 		xy2 *= 32;
+		score -= penalties[car_type][1];
 	}
 	else
 	{
@@ -154,7 +197,7 @@ bool checkCollision_o_car(int &xy1, int &xy2, int x, int y)
 
 }
 
-bool checkCollision_Obstacles(int &xy1, int &xy2, int x, int y)
+bool checkCollision_Obstacles(int &xy1, int &xy2, int x, int y, bool is_stickman)
 {
 	bool colX;
 	bool colY;
@@ -166,6 +209,15 @@ bool checkCollision_Obstacles(int &xy1, int &xy2, int x, int y)
 	if (colX && colY)
 	{
 		GenerateNewLocation(xy1, xy2);
+
+		if(is_stickman)
+		{
+			score -= 5;
+		}
+		else
+		{
+			score -= penalties[car_type][0];
+		}
 
 	}
 	else
@@ -722,78 +774,79 @@ void GameDisplay()/**/{
 			0.0/*Blue Component*/, 0 /*Alpha component*/); // Red==Green==Blue==1 --> White Colour
 	glClear (GL_COLOR_BUFFER_BIT); //Update the colors
 
-	// //Red Square
-	// DrawSquare(400, 20, 40, colors[RED]);
-	
-	 //Green Square
-	 //DrawSquare( 128 , 128 ,30,colors[GREEN]); 
-	
-	// //Display Score
-	// DrawString( 50, 800, "Score=0", colors[MISTY_ROSE]);
-	
-	// // Trianlge Vertices v1(300,50) , v2(500,50) , v3(400,250)
-	// DrawTriangle( 300, 450 , 340, 450 , 320 , 490, colors[MISTY_ROSE] ); 
-	
-
-
-	// //DrawLine(int x1, int y1, int x2, int y2, int lwidth, float *color)
-	// DrawLine( 550 , 50 ,  550 , 480 , 1 , colors[MISTY_ROSE] );	
-	// DrawLine( 400 , 50 ,  550 , 50 , 32 , colors[MISTY_ROSE] );	
-	
-	// DrawCircle(50,670,10,colors[RED]);
-	// DrawCircle(70,670,10,colors[RED]);
-	// DrawCircle(90,670,10,colors[RED]);
-	//DrawRoundRect(500,200,50,100,colors[DARK_SEA_GREEN],70);
-	//DrawRoundRect(512,512,128,32,colors[DARK_OLIVE_GREEN],20);	
-
-	drawRoads();
-	
-	for(int i=0; i<3; i++)
+	if(!start)
 	{
-		DrawSquare(drop_x*32,drop_y*32, 32, colors[GREEN]);
-		drawStickMan(stickman_x[i],stickman_y[i]);
-		drawTree(tree_x[i],tree_y[i]);
-		drawBox(box_x[i],box_y[i]);
-		drawObstacleCar(o_car_x[i], o_car_y[i]);
-	}
-
-	
-
-	for(int i=0; i <19; i++)
-	{
-		checkTouching(walls[i][0], walls[i][1], walls[i][2], walls[i][3]);
-	}
-
-	for(int i=0; i<3; i++)
-	{
-		checkCollision_Obstacles(stickman_x[i],stickman_y[i],xI,yI);
-		checkCollision_Obstacles(tree_x[i],tree_y[i],xI,yI);
-		checkCollision_Obstacles(box_x[i],box_y[i],xI,yI);
-		checkCollision_o_car(o_car_x[i],o_car_y[i],xI,yI);
-
-		if (is_close_stickman == 0)
+		if(!win)
 		{
-			checkCloseTooStickman(stickman_x[i],stickman_y[i],xI,yI, i);
+			DrawString( 230, 400, "RUSH HOUR", colors[WHITE]); 
+			DrawString( 160, 250, "Press F1 to select RED TAXI", colors[WHITE]); 
+			DrawString( 140, 220, "Press F2 to select YELLOW TAXI", colors[WHITE]);
 		}
 		else
 		{
-			checkCloseTooStickman(stickman_x[close_stickman_index],stickman_y[close_stickman_index],xI,yI, close_stickman_index);
+			WIN();
 		}
 	}
+	else
+	{
+		//GUIDE LINES
+		for(int i=0; i <= 20; i ++)
+		{
+			DrawLine( i*32 , 0 ,  i*32 , 640 , 1 , colors[MISTY_ROSE] );
+			DrawLine( 0, i*32 ,  640 , i*32 , 1 , colors[MISTY_ROSE] );
+		}
 
 
 
+		drawRoads();
+		Score();
+		
+		cout << "drop x " << drop_x << endl;
+		cout << "drop y " << drop_y << endl;
 
+		for(int i=0; i<3; i++)
+		{
+			DrawSquare(drop_x*32,drop_y*32, 32, colors[GREEN]);
+			drawStickMan(stickman_x[i],stickman_y[i]);
+			drawTree(tree_x[i],tree_y[i]);
+			drawBox(box_x[i],box_y[i]);
+			drawObstacleCar(o_car_x[i], o_car_y[i]);
+		}
 
-	//DabbaBanao(256,544,288,416, colors[DARK_SEA_GREEN]);	
+		
 
-	// DrawRoundRect(100,100,50,100,colors[DARK_OLIVE_GREEN],30);
-	// DrawRoundRect(200,100,100,50,colors[LIME_GREEN],40);
-	// DrawRoundRect(350,100,100,50,colors[LIME_GREEN],20);
-	
-	drawCar();
-	
-	//moveCar();
+		for(int i=0; i <19; i++)
+		{
+			checkTouching(walls[i][0], walls[i][1], walls[i][2], walls[i][3]);
+		}
+
+		for(int i=0; i<3; i++)
+		{
+			checkCollision_Obstacles(stickman_x[i],stickman_y[i],xI,yI,1);
+			checkCollision_Obstacles(tree_x[i],tree_y[i],xI,yI,0);
+			checkCollision_Obstacles(box_x[i],box_y[i],xI,yI,0);
+			checkCollision_o_car(o_car_x[i],o_car_y[i],xI,yI);
+			
+			if(picked_stickman == 0)
+			{
+				if (is_close_stickman == 0)
+				{
+					checkCloseToStickman(stickman_x[i],stickman_y[i],xI,yI, i);
+				}
+				else
+				{
+					checkCloseToStickman(stickman_x[close_stickman_index],stickman_y[close_stickman_index],xI,yI, close_stickman_index);
+				}
+			}
+			else
+			{
+				checkCloseToDrop();
+			}
+		}
+
+		drawCar();
+	}
+
 	glutSwapBuffers(); // do not modify this line..
 
 }
@@ -812,34 +865,55 @@ void GameDisplay()/**/{
 
 void NonPrintableKeys(int key, int x, int y) {
 
-	
-
-	if (key== GLUT_KEY_LEFT /*GLUT_KEY_LEFT is constant and contains ASCII for left arrow key*/) 
-	{
-		// what to do when left key is pressed...
-		//xI -= 10;
-		direction = -1;
-	} 
-	else if (key== GLUT_KEY_RIGHT /*GLUT_KEY_RIGHT is constant and contains ASCII for right arrow key*/) 
-	{
-		//xI += 10;
-		direction = 1;
-	} 
-	else if (key== GLUT_KEY_UP/*GLUT_KEY_UP is constant and contains ASCII for up arrow key*/) 
-	{
-		//yI += 10;
-		direction = 2;
-	}
-	else if (key== GLUT_KEY_DOWN/*GLUT_KEY_DOWN is constant and contains ASCII for down arrow key*/) {
 		
-		//yI -= 10;
-		direction = -2;
+	if(start && !win)
+	{
+		if (key== GLUT_KEY_LEFT /*GLUT_KEY_LEFT is constant and contains ASCII for left arrow key*/) 
+		{
+			// what to do when left key is pressed...
+			//xI -= 10;
+			direction = -1;
+		} 
+		else if (key== GLUT_KEY_RIGHT /*GLUT_KEY_RIGHT is constant and contains ASCII for right arrow key*/) 
+		{
+			//xI += 10;
+			direction = 1;
+		} 
+		else if (key== GLUT_KEY_UP/*GLUT_KEY_UP is constant and contains ASCII for up arrow key*/) 
+		{
+			//yI += 10;
+			direction = 2;
+		}
+		else if (key== GLUT_KEY_DOWN/*GLUT_KEY_DOWN is constant and contains ASCII for down arrow key*/) {
+			
+			//yI -= 10;
+			direction = -2;
+		}
+		else 
+		{
+			direction = 0;
+		}
 	}
 	else 
 	{
-		direction = 0;
+
+		if (!win)
+		{
+			if(key == GLUT_KEY_F1)
+			{
+				car_type = 0;
+				start = 1;
+			}
+
+			if (key == GLUT_KEY_F2)
+			{
+				car_type = 1;
+				start = 1;
+			}
+		}
 	}
 
+	
 
 	/* This function calls the Display function to redo the drawing. Whenever you need to redraw just call
 	 * this function*/
@@ -858,19 +932,47 @@ void PrintableKeys(unsigned char key, int x, int y) {
 		exit(1); // exit the program when escape key is pressed.
 	}
 
-	if (key == 32 && is_close_stickman) //Key for placing the bomb
+	if(start)
 	{
-		//do something if b is pressed
-		stickman_x[close_stickman_index] = -1;
-		stickman_y[close_stickman_index] = -1;
-		is_close_stickman = 99;
-		GenerateNewLocation(drop_x, drop_y);
+		if (key == 32 && is_close_stickman && !picked_stickman) 
+		{
+			//do something if b is pressed
+			stickman_x[close_stickman_index] = -1;
+			stickman_y[close_stickman_index] = -1;
+			picked_stickman =1;
+			GenerateNewLocation(drop_x, drop_y);
+		}
+
+		if (key == 32 && picked_stickman  && is_close_drop)
+		{
+			drop_x = -1;
+			drop_y = -1;
+			close_stickman_index = 99;
+			score += 10;
+			picked_stickman = 0;
+			is_close_drop =0;
+			num_picked_stickman++;
+
+			if(num_picked_stickman == 3)
+			{
+				num_picked_stickman =0;
+				for(int i=0; i<3; i++)
+					GenerateNewLocation(stickman_x[i], stickman_y[i]);
+			}
+
+			if (score > 100)
+			{
+				win = 1;
+				start = 0;
+			}
+		}
+
+		if (key == 's'|| key == 'S')
+		{
+			direction = 0;
+		}
 	}
 
-	if (key == 's'|| key == 'S')
-	{
-		direction = 0;
-	}
 	glutPostRedisplay();
 }
 
@@ -887,22 +989,26 @@ void Timer(int m) {
 
 	// implement your functionality here
 	//moveCar();
-
-	movecar();
-	move_o_car();
-
-	for(int j=0; j<3; j++)
+	if(start)
 	{
-		for(int i=0; i <19; i++)
+		movecar();
+		move_o_car();
+
+		for(int j=0; j<3; j++)
 		{
-			if( checkTouching_o_car(walls[i][0], walls[i][1], walls[i][2], walls[i][3], o_car_x[j],o_car_y[j]) )
+			for(int i=0; i <19; i++)
 			{
-				o_direction[j] *= -1;
-				break;
+				if( checkTouching_o_car(walls[i][0], walls[i][1], walls[i][2], walls[i][3], o_car_x[j],o_car_y[j]) )
+				{
+					o_direction[j] *= -1;
+					break;
+				}
+				
 			}
-			
 		}
+
 	}
+	
 
 	// once again we tell the library to call our Timer function after next 1000/FPS
 	glutTimerFunc(10, Timer, 0);
