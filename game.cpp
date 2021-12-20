@@ -1,9 +1,9 @@
 //============================================================================
-// Name        : .cpp
-// Author      : FAST CS Department
-// Version     :
-// Copyright   : (c) Reserved
-// Description : Basic 2D game of Rush Hour...
+// Name        : BROKENGROUP 
+// Author      : Soban Amir (Director), Om Parakash(HOD CollisionDetection), Roshaan Ejaz (HOD Scoring) 
+// Version     : 1.0
+// Copyright   : (c) Reserved 
+// Description : RUSH HOUR GAME.
 //============================================================================
 
 #ifndef RushHour_CPP_
@@ -15,11 +15,14 @@
 #include<cmath> // for basic math functions such as cos, sin, sqrt
 using namespace std;
 
-int close_stickman_index=99, num_picked_stickman = 0, score=0, moving=0, speed =2, direction = 0 , o_direction[3] = {-2,-2,-2}, last_direction=0;
-bool win=0,start=0, is_close_stickman=0, is_close_drop=0, touching=false, picked_stickman = 0;
-int stickman_x[3]={0} ,stickman_y[3]={0}, tree_x[3]={0}, tree_y[3]={0}, box_x[3]={0}, box_y[3]={0}, o_car_x[3]={0}, o_car_y[3]={0}, drop_x =-1, drop_y=-1 ;
 
-int penalties[2][2] = {{2, 3},{4, 2}}, car_type=1; // car_type 3 doesn't exist
+int close_stickman_index=99, num_picked_stickman = 0, score=0, moving=0, speed =2, direction = 0 , o_direction[3] = {-2,-2,-2}, last_direction=0;
+bool win_lost=0, lost=0,start=0, is_close_stickman=0, is_close_drop=0, touching=false, picked_stickman = 0;
+int win_lost_type;
+int stickman_x[3]={0} ,stickman_y[3]={0}, tree_x[3]={0}, tree_y[3]={0}, box_x[3]={0}, box_y[3]={0}, o_car_x[3]={0}, o_car_y[3]={0}, drop_x =-1, drop_y=-1 ;
+int game_time;
+
+int penalties[2][2] = {{2, 3},{4, 2}}, car_type; // car_type 3 doesn't exist
 
 int walls[][4]= {{2,5,17,1}, {10,20,17,1}, {13,17,7,2}, {5,7,13,1}, {2,4,13,1},{11,13,3,2}, 
 			{3,7,3,2}, {3,7,4,2}, {3,7,5,2},
@@ -49,7 +52,13 @@ void SetCanvasSize(int width, int height) {
 void WIN()
 {
 	DrawSquare(0,0, 1000, colors[YELLOW]);
-	DrawString( 230, 400, "YOU WIN !!", colors[BLACK]); 
+	DrawString( 230, 400, "YOU WON !!", colors[BLACK]); 
+}
+
+void LOSE()
+{
+	DrawSquare(0,0, 1000, colors[RED]);
+	DrawString( 230, 400, "YOU LOST !!", colors[WHITE]); 
 }
 
 // displays score
@@ -61,6 +70,16 @@ void Score()
 	DrawString( 600, 600, s, colors[WHITE]);
 
 }
+
+void ShowTime()
+{
+	string s = to_string(game_time - time(NULL));
+
+	DrawString( 410, 600, "Time= ", colors[WHITE]); 
+	DrawString( 480, 600, s, colors[WHITE]);
+
+}
+
 
 int xI = 10, yI = 608;
 
@@ -324,6 +343,7 @@ void drawRoads()
 	{
 		DabbaBanaoNEW(walls[i][0], walls[i][1], walls[i][2], walls[i][3], colors[DARK_GRAY]);
 	}
+	
 	// DabbaBanaoNEW(2,5,17,1, colors[DARK_GRAY]);	
 	// DabbaBanaoNEW(10,20,17,1, colors[DARK_GRAY]);
 	// DabbaBanaoNEW(13,17,7,2, colors[DARK_GRAY]);
@@ -776,7 +796,7 @@ void GameDisplay()/**/{
 
 	if(!start)
 	{
-		if(!win)
+		if(!win_lost)
 		{
 			DrawString( 230, 400, "RUSH HOUR", colors[WHITE]); 
 			DrawString( 160, 250, "Press F1 to select RED TAXI", colors[WHITE]); 
@@ -784,22 +804,30 @@ void GameDisplay()/**/{
 		}
 		else
 		{
-			WIN();
+			if(win_lost_type == 1)
+			{
+				WIN();
+			}
+			else if (win_lost_type == 2)
+			{
+				LOSE();
+			}
 		}
 	}
 	else
 	{
 		//GUIDE LINES
-		for(int i=0; i <= 20; i ++)
-		{
-			DrawLine( i*32 , 0 ,  i*32 , 640 , 1 , colors[MISTY_ROSE] );
-			DrawLine( 0, i*32 ,  640 , i*32 , 1 , colors[MISTY_ROSE] );
-		}
+		// for(int i=0; i <= 20; i ++)
+		// {
+		// 	DrawLine( i*32 , 0 ,  i*32 , 640 , 1 , colors[MISTY_ROSE] );
+		// 	DrawLine( 0, i*32 ,  640 , i*32 , 1 , colors[MISTY_ROSE] );
+		// }
 
 
 
 		drawRoads();
 		Score();
+		ShowTime();
 		
 		cout << "drop x " << drop_x << endl;
 		cout << "drop y " << drop_y << endl;
@@ -866,7 +894,7 @@ void GameDisplay()/**/{
 void NonPrintableKeys(int key, int x, int y) {
 
 		
-	if(start && !win)
+	if(start && !win_lost)
 	{
 		if (key== GLUT_KEY_LEFT /*GLUT_KEY_LEFT is constant and contains ASCII for left arrow key*/) 
 		{
@@ -897,18 +925,22 @@ void NonPrintableKeys(int key, int x, int y) {
 	else 
 	{
 
-		if (!win)
+		if (!win_lost)
 		{
 			if(key == GLUT_KEY_F1)
 			{
 				car_type = 0;
 				start = 1;
+				game_time = time(NULL) + 180;
+
 			}
 
 			if (key == GLUT_KEY_F2)
 			{
 				car_type = 1;
 				start = 1;
+				game_time = time(NULL) + 180;
+
 			}
 		}
 	}
@@ -943,6 +975,7 @@ void PrintableKeys(unsigned char key, int x, int y) {
 			GenerateNewLocation(drop_x, drop_y);
 		}
 
+
 		if (key == 32 && picked_stickman  && is_close_drop)
 		{
 			drop_x = -1;
@@ -962,8 +995,10 @@ void PrintableKeys(unsigned char key, int x, int y) {
 
 			if (score > 100)
 			{
-				win = 1;
+				win_lost = 1;
+				win_lost_type = 1;
 				start = 0;
+				
 			}
 		}
 
@@ -1005,6 +1040,14 @@ void Timer(int m) {
 				}
 				
 			}
+		}
+
+		if (game_time - time(NULL) <= 0)
+		{
+			win_lost =1;
+			win_lost_type = 2;
+			start =0;
+
 		}
 
 	}
